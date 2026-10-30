@@ -102,7 +102,9 @@ class SecretsScanner:
 
             # Insecure string formatting vulnerability check
             for node in ast.walk(tree):
-                if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod) and isinstance(node.left, ast.Str):
+                # ast.Constant with a str value is the 3.8+ spelling of the
+                # old ast.Str check, which only survives as a shim.
+                if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Mod) and isinstance(node.left, ast.Constant) and isinstance(node.left.value, str):
                     line_number = node.lineno
                     self.results.append({
                         "type": "Vulnerability",
@@ -114,7 +116,7 @@ class SecretsScanner:
                     })
                     logging.warning(f"Potential insecure string formatting vulnerability found on line {line_number}")
 
-                if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "format" and isinstance(node.func.value, ast.Str):
+                if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "format" and isinstance(node.func.value, ast.Constant) and isinstance(node.func.value.value, str):
                     line_number = node.lineno
                     self.results.append({
                         "type": "Vulnerability",
@@ -153,12 +155,8 @@ class SecretsScanner:
             source_code (str): The source code to analyze.
         """
         try:
-            # Analyze raw metrics
-            raw_metrics = radon.raw.analyze(source_code)
-
-            # Analyze Cyclomatic Complexity
-            complexity_metrics = radon.complexity.cc_rank(source_code)
-            
+            # Only cc_visit feeds the report. Earlier drafts also computed
+            # raw metrics and a cc rank and then threw both away.
             for block in radon.complexity.cc_visit(source_code):
                 if block.complexity > 10:
                     self.results.append({
@@ -175,6 +173,49 @@ class SecretsScanner:
         except Exception as e:
             logging.error(f"Error during complexity analysis: {e}")
 
+    def _format_result(self, result):
+        # One formatter for console and file output. The two copies this
+        # replaces had already drifted in structure, and a fix applied to
+        # one view would silently miss the other.
+        # The stored evidence still holds the matched text, so the secret
+        # itself is swapped out here: a secrets scanner that prints the
+        # secret back in its own report just moves the leak.
+        known_secrets = [r['secret'] for r in self.results
+                         if r['type'] == 'Secret' and r.get('secret')]
+
+        def redact(text):
+            for secret in known_secrets:
+                text = text.replace(secret, '***')
+            return text
+
+        lines = [f"Type: {result['type']}"]
+        if result['type'] == 'Secret':
+            evidence = redact(result['evidence'])
+            lines += [
+                f"  Secret Type: {result['secret_type']}",
+                f"  Description: {result['description']}",
+                f"  Line Number: {result['line_number']}",
+                f"  Secret (Masked): {'*' * len(result['secret'])}",
+                f"  Evidence: {evidence}",
+            ]
+        elif result['type'] == 'Vulnerability':
+            lines += [
+                f"  Vulnerability Type: {result['vulnerability_type']}",
+                f"  Description: {result['description']}",
+                f"  Line Number: {result['line_number']}",
+                f"  Code Snippet: {redact(result['code_snippet'] or '')}",
+                f"  Severity: {result['severity']}",
+            ]
+        elif result['type'] == 'Complexity':
+            lines += [
+                f"  Complexity Type: {result['complexity_type']}",
+                f"  Description: {result['description']}",
+                f"  Line Number: {result['line_number']}",
+                f"  Function Name: {result['function_name']}",
+                f"  Complexity Score: {result['complexity_score']}",
+            ]
+        return lines
+
     def print_results(self, results):
         """
         Prints the scan results to the console.
@@ -188,26 +229,8 @@ class SecretsScanner:
 
         print("Scan Results:")
         for result in results:
-            print(f"  Type: {result['type']}")
-            if result['type'] == 'Secret':
-                print(f"    Secret Type: {result['secret_type']}")
-                print(f"    Description: {result['description']}")
-                print(f"    Line Number: {result['line_number']}")
-                print(f"    Secret (Masked): {'*' * len(result['secret'])}") # Masking the secret
-                print(f"    Evidence: {result['evidence']}")
-            elif result['type'] == 'Vulnerability':
-                print(f"    Vulnerability Type: {result['vulnerability_type']}")
-                print(f"    Description: {result['description']}")
-                print(f"    Line Number: {result['line_number']}")
-                print(f"    Code Snippet: {result['code_snippet']}")
-                print(f"    Severity: {result['severity']}")
-            elif result['type'] == 'Complexity':
-                print(f"    Complexity Type: {result['complexity_type']}")
-                print(f"    Description: {result['description']}")
-                print(f"    Line Number: {result['line_number']}")
-                print(f"    Function Name: {result['function_name']}")
-                print(f"    Complexity Score: {result['complexity_score']}")
-
+            for line in self._format_result(result):
+                print("  " + line if not line.startswith("Type:") else line)
             print("-" * 20)
 
     def write_results_to_file(self, results):
@@ -220,26 +243,8 @@ class SecretsScanner:
         try:
             with open(self.output_file, 'w', encoding='utf-8') as f:
                 for result in results:
-                    f.write(f"Type: {result['type']}\n")
-                    if result['type'] == 'Secret':
-                        f.write(f"  Secret Type: {result['secret_type']}\n")
-                        f.write(f"  Description: {result['description']}\n")
-                        f.write(f"  Line Number: {result['line_number']}\n")
-                        f.write(f"  Secret (Masked): {'*' * len(result['secret'])}\n")
-                        f.write(f"  Evidence: {result['evidence']}\n")
-                    elif result['type'] == 'Vulnerability':
-                        f.write(f"  Vulnerability Type: {result['vulnerability_type']}\n")
-                        f.write(f"  Description: {result['description']}\n")
-                        f.write(f"  Line Number: {result['line_number']}\n")
-                        f.write(f"  Code Snippet: {result['code_snippet']}\n")
-                        f.write(f"  Severity: {result['severity']}\n")
-                    elif result['type'] == 'Complexity':
-                        f.write(f"  Complexity Type: {result['complexity_type']}\n")
-                        f.write(f"  Description: {result['description']}\n")
-                        f.write(f"  Line Number: {result['line_number']}\n")
-                        f.write(f"  Function Name: {result['function_name']}\n")
-                        f.write(f"  Complexity Score: {result['complexity_score']}\n")
-
+                    for line in self._format_result(result):
+                        f.write(line + "\n")
                     f.write("-" * 20 + "\n")
             logging.info(f"Scan results written to {self.output_file}")
         except Exception as e:
@@ -277,13 +282,4 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    """
-    Usage examples:
-    
-    1. Scan a file and print results to console:
-       python acra-SecretsScanner.py example.py
-       
-    2. Scan a file and save results to a file:
-       python acra-SecretsScanner.py example.py -o results.txt
-    """
     main()
