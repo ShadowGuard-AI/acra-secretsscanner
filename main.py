@@ -1,5 +1,7 @@
 import argparse
 import ast
+import math
+from collections import Counter
 import logging
 import os
 import re
@@ -9,6 +11,14 @@ import radon.complexity
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def shannon_entropy(value):
+    """Shannon entropy of a string, in bits per character."""
+    if not value:
+        return 0.0
+    counts = Counter(value)
+    length = len(value)
+    return -sum((count / length) * math.log2(count / length) for count in counts.values())
 
 class SecretsScanner:
     """
@@ -86,6 +96,7 @@ class SecretsScanner:
                     "description": f"Possible exposed {secret_type} found.",
                     "line_number": line_number,
                     "secret": secret,
+                    "entropy": shannon_entropy(secret),
                     "evidence": match.group(0)
                 })
                 logging.warning(f"Possible exposed {secret_type} found on line {line_number}")
@@ -141,6 +152,8 @@ class SecretsScanner:
                                         "description": f"Potential hardcoded credential found in variable '{target.id}'.",
                                         "line_number": line_number,
                                         "code_snippet": ast.get_source_segment(source_code, node),
+                                        "secret": node.value.value,
+                                        "entropy": shannon_entropy(node.value.value),
                                         "severity": "Critical"
                                     })
                                     logging.critical(f"Potential hardcoded credential found on line {line_number}")
@@ -180,8 +193,13 @@ class SecretsScanner:
         # The stored evidence still holds the matched text, so the secret
         # itself is swapped out here: a secrets scanner that prints the
         # secret back in its own report just moves the leak.
-        known_secrets = [r['secret'] for r in self.results
-                         if r['type'] == 'Secret' and r.get('secret')]
+        # Every detection pass feeds this set, not only the regex pass.
+        # The AST check flags a wider, case insensitive name set (token,
+        # lowercase api_key, capitalised Password), and values found only
+        # by that pass used to print word for word in Code Snippet lines.
+        known_secrets = sorted(
+            [r['secret'] for r in self.results if r.get('secret')],
+            key=len, reverse=True)
 
         def redact(text):
             for secret in known_secrets:
@@ -196,6 +214,7 @@ class SecretsScanner:
                 f"  Description: {result['description']}",
                 f"  Line Number: {result['line_number']}",
                 f"  Secret (Masked): {'*' * len(result['secret'])}",
+                f"  Entropy: {result.get('entropy', shannon_entropy(result['secret'])):.2f} bits per character",
                 f"  Evidence: {evidence}",
             ]
         elif result['type'] == 'Vulnerability':
@@ -206,6 +225,8 @@ class SecretsScanner:
                 f"  Code Snippet: {redact(result['code_snippet'] or '')}",
                 f"  Severity: {result['severity']}",
             ]
+            if result.get('entropy') is not None:
+                lines.append(f"  Entropy: {result['entropy']:.2f} bits per character")
         elif result['type'] == 'Complexity':
             lines += [
                 f"  Complexity Type: {result['complexity_type']}",
