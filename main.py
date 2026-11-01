@@ -72,6 +72,14 @@ class SecretsScanner:
             source_code (str): The source code to scan.
         """
 
+        # These patterns all expect an assignment shaped piece of text:
+        # a name, an equals or colon, then a value. A secret sitting in a
+        # comment, a bare string, or an environment lookup has none of
+        # that shape and passes unseen. I keep the narrow shape because
+        # widening it turned every long token in a file into a finding
+        # when I tried, and a scanner that cries on everything gets
+        # ignored. The limit is real, though: this finds secrets written
+        # down plainly, not secrets in general.
         # Regular expressions for common secret patterns
         api_key_regex = r"(?:API|api)[ _-]*KEY[ _-]*[=:][ ]*['\"]?([a-zA-Z0-9_-]+)['\"]?"
         password_regex = r"(?:password|pwd)[ _-]*[=:][ ]*['\"]?([a-zA-Z0-9!@#$%^&*()_+=-`~\[\]\{\}\|;':\",./<>?]+)['\"]?"
@@ -88,6 +96,10 @@ class SecretsScanner:
         for secret_type, pattern in secrets_patterns.items():
             matches = re.finditer(pattern, source_code)
             for match in matches:
+                # The AWS pattern has no capture group, so for that one
+                # the whole match is the secret. The others capture just
+                # the value, which is what the entropy score and the
+                # masked print should be measured on.
                 secret = match.group(1) if match.groups() else match.group(0)
                 line_number = source_code.count('\n', 0, match.start()) + 1
                 self.results.append({
@@ -143,6 +155,11 @@ class SecretsScanner:
                 if isinstance(node, ast.Assign):
                     for target in node.targets:
                         if isinstance(target, ast.Name):
+                            # Exact name match after lowering, nothing
+                            # fuzzier. my_password, passwd, and a name with
+                            # the word buried in it all pass. I would
+                            # rather miss those here than flag every
+                            # variable that happens to contain "token".
                             if target.id.lower() in ["password", "pwd", "api_key", "secret_key", "token"]:
                                 if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
                                     line_number = node.lineno
@@ -158,6 +175,11 @@ class SecretsScanner:
                                     })
                                     logging.critical(f"Potential hardcoded credential found on line {line_number}")
         except SyntaxError as e:
+            # A file that does not parse gets no AST checks at all, and
+            # scan() still carries on to complexity and prints whatever
+            # the regex pass found. The report can therefore look
+            # complete for a file this pass never actually read. The log
+            # line is the only place that difference shows.
             logging.error(f"Syntax error in file: {e}")
 
     def analyze_complexity(self, source_code):
@@ -171,6 +193,10 @@ class SecretsScanner:
             # Only cc_visit feeds the report. Earlier drafts also computed
             # raw metrics and a cc rank and then threw both away.
             for block in radon.complexity.cc_visit(source_code):
+                # Strictly over 10, so a block scoring exactly 10 stays
+                # out. That edge is arbitrary; I picked the round number
+                # where, in the files I tested, the functions really did
+                # start being hard to follow.
                 if block.complexity > 10:
                     self.results.append({
                             "type": "Complexity",
@@ -269,6 +295,9 @@ class SecretsScanner:
                     f.write("-" * 20 + "\n")
             logging.info(f"Scan results written to {self.output_file}")
         except Exception as e:
+            # A failed write is only logged, so the run still exits 0
+            # with no report on disk. I know that can hide a lost scan;
+            # it is logged here rather than fixed in a comment pass.
             logging.error(f"Error writing results to file: {e}")
 
 
