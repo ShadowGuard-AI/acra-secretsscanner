@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" role="img" aria-label="The moss garden in three bands: canopy light drifting at the top, fern fronds uncurling and mushroom caps brightening in sequence in the middle, and the moss field below where bright points fade as the surface dries and one drop falls in a long cycle">
+<rect x="0" y="0" width="1200" height="70" fill="#1d4423"/>
+<g fill="#d8ecA5">
+<ellipse cx="200" cy="30" rx="30" ry="7" fill="#d8eca5" opacity="0.5"><animate attributeName="cx" values="200;232;200" dur="24s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.5;0.28;0.5" dur="24s" repeatCount="indefinite"/></ellipse>
+<ellipse cx="560" cy="20" rx="22" ry="5" fill="#d8eca5" opacity="0.4"><animate attributeName="cx" values="560;536;560" dur="29s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.4;0.6;0.4" dur="29s" repeatCount="indefinite"/></ellipse>
+<ellipse cx="900" cy="34" rx="34" ry="8" fill="#d8eca5" opacity="0.45"><animate attributeName="cx" values="900;928;900" dur="26s" repeatCount="indefinite"/></ellipse>
+</g>
+<rect x="0" y="70" width="1200" height="110" fill="#26502c"/>
+<g stroke="#54a04e" stroke-width="3" fill="none">
+<path d="M420,178 q-6,-52 -44,-74"><animateTransform attributeName="transform" type="rotate" values="0 420 178; -2.5 420 178; 0 420 178" dur="40s" repeatCount="indefinite"/></path>
+<path d="M436,178 q2,-58 -22,-88"><animateTransform attributeName="transform" type="rotate" values="0 436 178; -2 436 178; 0 436 178" dur="40s" repeatCount="indefinite"/></path>
+<path d="M452,178 q12,-52 -2,-84"><animateTransform attributeName="transform" type="rotate" values="0 452 178; 1.8 452 178; 0 452 178" dur="40s" repeatCount="indefinite"/></path>
+<path d="M468,178 q22,-44 22,-70"><animateTransform attributeName="transform" type="rotate" values="0 468 178; 2.4 468 178; 0 468 178" dur="40s" repeatCount="indefinite"/></path>
+</g>
+<g fill="#cfc39a">
+<circle cx="742" cy="150" r="6" opacity="0.35"><animate attributeName="opacity" values="0.35;0.95;0.35;0.35" keyTimes="0;0.12;0.3;1" dur="18s" repeatCount="indefinite"/></circle>
+<circle cx="766" cy="138" r="5.4" opacity="0.35"><animate attributeName="opacity" values="0.35;0.35;0.95;0.35;0.35" keyTimes="0;0.2;0.34;0.52;1" dur="18s" repeatCount="indefinite"/></circle>
+<circle cx="792" cy="140" r="5" opacity="0.35"><animate attributeName="opacity" values="0.35;0.35;0.95;0.35;0.35" keyTimes="0;0.42;0.56;0.74;1" dur="18s" repeatCount="indefinite"/></circle>
+<circle cx="806" cy="156" r="5.6" opacity="0.35"><animate attributeName="opacity" values="0.35;0.35;0.9;0.35" keyTimes="0;0.64;0.78;1" dur="18s" repeatCount="indefinite"/></circle>
+</g>
+<rect x="0" y="180" width="1200" height="120" fill="#2e6634"/>
+<g fill="#e2f4cd">
+<circle cx="180" cy="222" r="1.8"><animate attributeName="opacity" values="0.9;0.25" dur="34s" repeatCount="indefinite"/></circle>
+<circle cx="330" cy="252" r="1.5"><animate attributeName="opacity" values="0.8;0.2" dur="34s" repeatCount="indefinite"/></circle>
+<circle cx="520" cy="230" r="1.7"><animate attributeName="opacity" values="0.85;0.22" dur="34s" repeatCount="indefinite"/></circle>
+<circle cx="700" cy="258" r="1.4"><animate attributeName="opacity" values="0.75;0.2" dur="34s" repeatCount="indefinite"/></circle>
+<circle cx="880" cy="226" r="1.8"><animate attributeName="opacity" values="0.9;0.25" dur="34s" repeatCount="indefinite"/></circle>
+<circle cx="1050" cy="250" r="1.5"><animate attributeName="opacity" values="0.8;0.2" dur="34s" repeatCount="indefinite"/></circle>
+</g>
+<g>
+<circle cx="612" cy="182" r="3" fill="#dcefe8" opacity="0">
+<animate attributeName="cy" values="182;182;238;238" keyTimes="0;0.55;0.63;1" dur="30s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="0;0;0.95;0;0" keyTimes="0;0.55;0.6;0.64;1" dur="30s" repeatCount="indefinite"/>
+</circle>
+<ellipse cx="612" cy="242" rx="4" ry="2" fill="none" stroke="#dcefe8" stroke-width="1.4" opacity="0">
+<animate attributeName="rx" values="4;4;17;17" keyTimes="0;0.63;0.72;1" dur="30s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="0;0;0.8;0;0" keyTimes="0;0.63;0.66;0.72;1" dur="30s" repeatCount="indefinite"/>
+</ellipse>
+</g>
+</svg>
