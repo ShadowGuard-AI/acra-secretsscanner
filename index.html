@@ -3,106 +3,62 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>acra-SecretsScanner: The Moss Garden of Saiho-ji</title>
-<meta name="description" content="acra-SecretsScanner scans source code files for exposed secrets: API keys, passwords, and private keys. Found values are masked in every report, with a Shannon entropy value for each.">
+<title>acra-SecretsScanner: The Redaction Desk</title>
+<meta name="description" content="A command-line scanner that searches source code files for exposed secrets with regular expressions, reports a Shannon entropy value for each found value, and masks the value in every report.">
 <style>
-@font-face{font-family:'Assistant';src:url('fonts/Assistant.ttf') format('truetype');}
-@font-face{font-family:'Bitter';src:url('fonts/Bitter.ttf') format('truetype');}
-:root{--deep:#1e4023;--leaf:#2e6634;--paper:#faf8f0;--amber:#ce8a2c;--gold:#d9b45c}
-*{box-sizing:border-box}
-body{margin:0;background:var(--deep);color:#e9eee2;font-family:'Bitter',serif;line-height:1.65}
-h1,h2{font-family:'Assistant',sans-serif;color:var(--paper);letter-spacing:.03em}
-.hero{padding:2rem 6vw 0;max-width:1000px;margin:0 auto}
-.hero img.banner{width:100%;height:auto;display:block}
-.logo{width:180px;height:auto;background:var(--paper);padding:6px}
-nav{display:flex;flex-wrap:wrap;gap:.4rem 1.5rem;padding:.9rem 0}
-main{padding:0 6vw 3rem;max-width:1000px;margin:0 auto}
-.label{background:var(--paper);color:#24402a;padding:1.2rem 1.5rem;margin:1.6rem 0;border:1.5px solid #9aa88f;position:relative}
-.label:before{content:'';position:absolute;top:10px;left:12px;width:16px;height:16px;background:#7ba05b;border-radius:0 60% 0 60%;transform:rotate(-24deg)}
-.label h2{color:var(--deep);border-bottom:1px solid #9aa88f;padding-bottom:.35rem;margin-left:1.4rem}
-.label p{margin-left:1.4rem}
-.label code,.label pre{color:#1e4023}
-pre{background:#eef0e4;padding:1rem;overflow-x:auto;font-size:.92rem}
-.stonebtn{display:inline-block;background:linear-gradient(#3a6b3e,#2a5230);color:var(--paper);font-family:'Assistant',sans-serif;text-decoration:none;padding:.7rem 1.4rem;margin:.35rem .45rem .35rem 0;border:2px solid #223d24;border-radius:46% 54% 48% 52%/70% 72% 30% 32%;box-shadow:inset 0 3px 0 rgba(217,180,92,.35),0 3px 0 #16281a;transition:transform .15s,box-shadow .15s;font-size:1rem}
-.stonebtn:hover{box-shadow:inset 0 3px 0 rgba(217,180,92,.35),0 3px 0 #16281a,0 -6px 12px rgba(217,180,92,.55)}
-.stonebtn:active{transform:translateY(3px);background:linear-gradient(#2a5230,#1e4023);box-shadow:0 1px 0 #16281a}
-.stonebtn:focus-visible{outline:2.5px solid var(--amber);outline-offset:3px}
-a{color:var(--gold)}
-a:before{content:'◠';color:#e6dfc0;margin-right:.3rem;font-size:.85em}
-a:hover:before{content:'◠◠';color:#fff2c8}
-.label a{color:#8a5f14}
-.label a:before{color:#7ba05b}
-.stonebtn:before{content:none}
-.stone{background:#54604f;color:#f2f0e4;padding:1rem 1.3rem;border-top:6px solid #4c8a4a;margin:1rem 0 1rem 1.4rem;border-radius:0 0 10px 10px}
-.stone h3{font-family:'Assistant',sans-serif;margin:.1rem 0 .4rem;color:#fff}
-.rain{height:22px;margin:2rem auto;max-width:820px;position:relative}
-.rain:before{content:'';position:absolute;left:0;right:0;top:8px;height:9px;background:#4c8a4a;border-radius:50% 50% 50% 50%/100% 100% 0 0}
-.rain:after{content:'● ● ●';position:absolute;right:8%;top:13px;color:#dcefe8;font-size:7px;letter-spacing:9px}
-code{font-family:ui-monospace,monospace}
-footer{padding:1rem 6vw 2.4rem;max-width:1000px;margin:0 auto}
+@font-face{font-family:'Victor Mono';src:url('fonts/VictorMono-400.woff2') format('woff2');font-weight:400}
+@font-face{font-family:'Victor Mono';src:url('fonts/VictorMono-500.woff2') format('woff2');font-weight:500}
+@font-face{font-family:'Victor Mono';src:url('fonts/VictorMono-600.woff2') format('woff2');font-weight:600}
+@font-face{font-family:'Victor Mono';src:url('fonts/VictorMono-700.woff2') format('woff2');font-weight:700}
+@font-face{font-family:'Readex Pro';src:url('fonts/ReadexPro-400.woff2') format('woff2');font-weight:400}
+@font-face{font-family:'Readex Pro';src:url('fonts/ReadexPro-500.woff2') format('woff2');font-weight:500}
+@font-face{font-family:'Readex Pro';src:url('fonts/ReadexPro-600.woff2') format('woff2');font-weight:600}
+@font-face{font-family:'Readex Pro';src:url('fonts/ReadexPro-700.woff2') format('woff2');font-weight:700}
+:root{--cream:#f3ead8;--paper:#faf5e9;--walnut:#5f4630;--walnutdk:#3d2c1e;--marker:#141414;--wax:#a8232a;--line:#ddd0b8;--ink:#2b2721}
+*{box-sizing:border-box} body{margin:0;background:#e7dcc4;color:var(--ink);font-family:'Readex Pro',sans-serif;line-height:1.65}
+h1,h2{font-family:'Victor Mono',monospace}
+.hero{background:linear-gradient(170deg,#77593a 0%,var(--walnut) 55%,var(--walnutdk) 100%);padding:2.2rem 6vw 1.8rem;border-bottom:8px solid var(--wax)}
+.hero .inner{max-width:1020px;margin:0 auto}
+.hero img.wide{width:100%;height:auto;display:block;border:5px solid var(--cream);border-radius:4px;box-shadow:0 4px 18px rgba(0,0,0,.45)}
+.hero .row{display:flex;gap:1.1rem;align-items:flex-start;margin-top:1.2rem}
+.hero .row img{width:92px;height:92px;object-fit:cover;border-radius:6px;border:3px solid var(--cream);background:var(--cream)}
+.hero h1{margin:.1rem 0 .3rem;font-size:2.1rem;font-weight:700;color:#fdf8ec}
+.hero p{max-width:44rem;color:#f1e8d2}
+.hero a{color:#ffb3a8}
+main{padding:0 6vw 3rem;max-width:1020px;margin:0 auto}
+.card{background:var(--paper);border:1px solid var(--line);border-top:8px solid var(--walnut);padding:1.2rem 1.5rem;margin:1.6rem 0;box-shadow:0 2px 8px rgba(50,35,18,.18)}
+.card.wax{border-top-color:var(--wax)}
+.card h2{margin:.1rem 0 .5rem;font-size:1.45rem;font-weight:600;color:var(--walnutdk)}
+.card p{margin:.4rem 0}
+.strip{background:var(--marker);color:#f2ecdc;padding:1rem 1.2rem;overflow-x:auto;font-family:'Victor Mono',monospace;font-size:.92rem;border-radius:4px;border-left:6px solid var(--wax)}
+.btn{display:inline-block;background:var(--wax);color:#fff;font-family:'Readex Pro',sans-serif;font-weight:600;text-decoration:none;padding:.55rem 1.1rem;border-radius:3px;margin:.3rem .4rem .3rem 0}
+.btn:hover{background:var(--cream);color:var(--wax)}.btn:active{transform:translateY(2px)}
+.btn:focus-visible{outline:2px dashed var(--wax);outline-offset:3px}
+a{color:var(--wax);font-weight:600}
+table{border-collapse:collapse}td{padding:.2rem .9rem .2rem 0;vertical-align:top}
+td:first-child{font-weight:600;color:var(--walnutdk);white-space:nowrap}
+ul{margin:.4rem 0;padding-left:1.2rem}li{margin:.25rem 0}
+.small{font-size:.92rem}
+footer{padding:0 6vw 2.5rem;max-width:1020px;margin:0 auto;color:#8a7757}
 </style>
 </head>
 <body>
 <header class="hero">
-<img class="banner" src="assets/intro-banner.png" alt="Close moss cushions after rain under maple trunks, one amber leaf on the nearest cushion">
-<img class="logo" src="assets/logo.png" alt="A moss cushion from above inside a raked gravel ring, with the project name on a specimen strip">
-<h1>acra-SecretsScanner</h1>
-<p>The view from the gate: this tool works the way the garden is kept, by looking closely at a surface others walk past, and by refusing to carry what it finds into the open.</p>
-<nav>
-<a href="#hunts">What it hunts</a>
-<a href="#report">How a find is reported</a>
-<a href="#gate">Install and use</a>
-<a href="#params">The two parameters</a>
-<a href="https://github.com/ShadowGuard-AI/acra-secretsscanner">GitHub</a>
-</nav>
-<p><a class="stonebtn" href="https://github.com/ShadowGuard-AI/acra-secretsscanner">Scan the Source</a>
-<a class="stonebtn" href="#params">Save Results to a File</a>
-<a class="stonebtn" href="#params">Show Help</a></p>
+<div class="inner">
+<img class="wide" src="assets/intro-banner.png" alt="A heavy black marker drawing one firm redaction bar across a single line of a cream document on a walnut desk under a green banker's lamp, the rest of the page open around it and a red wax seal waiting at the desk edge">
+<div class="row"><img src="assets/logo.png" alt="acra-SecretsScanner logo: a cream document photographed from directly above on a walnut desk, three thick black redaction bars laid across its middle lines and a heavy black marker lettered Sharpie resting beside it, with one red wax seal at the page corner; the print outside the bars is blurred beyond reading"><div><h1>acra-SecretsScanner</h1><p>A command-line tool that scans source code files for exposed secrets like API keys, passwords, and private keys. It uses regular expressions to identify potential secrets, and reports a Shannon entropy value (bits per character) for each found value.</p><p><a class="btn" href="https://github.com/ShadowGuard-AI/acra-secretsscanner">Open the repo</a> <a class="btn" href="#usage">Usage</a></p></div></div>
+</div>
 </header>
 <main>
-<section class="label" id="hunts">
-<h2>Secrets Left Exposed</h2>
-<p>acra-SecretsScanner is a command line tool that scans source code files for exposed secrets. The three kinds it hunts:</p>
-<p>API keys</p>
-<p>Passwords</p>
-<p>Private keys</p>
-<p>It identifies potential secrets with regular expressions.</p>
-</section>
-<div class="rain"></div>
-<section class="label" id="report">
-<h2>Masked in Every Report</h2>
-<p>For each found value the report gives a Shannon entropy value in bits per character.</p>
-<p>Found values are masked in every report, console and file alike. A reader sees the key name, the line, the length of the mask, and the entropy, and never the value itself.</p>
-<div class="stone">
-<h3>The Value Itself Never Appears</h3>
-<p>Masking is the heart of this tool: the report shows where a secret lies and how strong it looks, while the secret stays where it was found, unseen by anyone reading the report.</p>
-</div>
-</section>
-<div class="rain"></div>
-<section class="label" id="gate">
-<h2>At the Gate</h2>
-<p>Install is a single clone line, as the README gives it:</p>
-<pre>git clone https://github.com/ShadowStrikeHQ/acra-secretsscanner</pre>
-<p>Usage is given exactly as documented:</p>
-<pre>./acra-secretsscanner [params]</pre>
-<p>Honestly stated: the README names no scan target argument, shows no worked example of a file or folder being scanned, and lists no patterns, so a visitor cannot learn those things here, because the source document does not state them.</p>
-</section>
-<div class="rain"></div>
-<section class="label" id="params">
-<h2>The Two Parameters</h2>
-<p><code>-h</code> shows the help message and exits.</p>
-<p><code>-o</code> takes the path to a file where scan results are saved.</p>
-<p>Those two are the complete documented set.</p>
-</section>
-<div class="rain"></div>
-<section class="label">
-<h2>A Short Honest Closing</h2>
-<p>The README for this project is thin. It gives no sample output, no exit code behaviour, no list of file types covered, and no test results. This page states that absence in plain words instead of inventing a fuller tool.</p>
-<p>Copyright (c) ShadowStrikeHQ</p>
-</section>
+<section class="card wax"><h2>The value itself never appears</h2><p>Found values are masked in every report, console and file alike: the report shows the key name, line, length of the mask, and entropy, never the value itself. A secret can be named, located, and measured without ever being printed.</p></section>
+<section class="card" id="usage"><h2>Usage</h2><div class="strip">./acra-secretsscanner [params]</div><table>
+<tr><td><code>-h</code></td><td>Show help message and exit</td></tr>
+<tr><td><code>-o</code></td><td>Path to the file to save the scan results</td></tr>
+</table></section>
+<section class="card"><h2>How it reads</h2><p>The scanner searches source code files with regular expressions for the shapes of exposed secrets, API keys, passwords, and private keys among them. For each found value it computes a Shannon entropy value in bits per character, so a report carries both where the secret sits and how strong it looks, while the secret itself stays under the bar.</p></section>
+<section class="card wax"><h2>The honest limits</h2><p>The README documents no scan target argument and no sample output, so neither appears here. What the README does document is the masking rule above, and it holds in every report the tool writes.</p></section>
+<section class="card"><h2>The files</h2><p class="small"><code>main.py</code>, the scanner itself. <code>requirements.txt</code>, its dependency list. <code>LICENSE</code>, the MIT License. Full notes are in the <a href="https://github.com/ShadowGuard-AI/acra-secretsscanner">repo README</a>.</p></section>
 </main>
-<footer>
-<p>Theme: the moss garden of Saiho-ji, seen from its gate. Type: Assistant for headings, Bitter for reading, both SIL Open Font License 1.1. No lettering reference is used for this project; lettering follows Assistant itself.</p>
-</footer>
+<footer><p>Found, measured, and covered in the same pass: the bar is the report.</p></footer>
 </body>
 </html>
