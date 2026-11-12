@@ -8,7 +8,6 @@
 
 ![Animated garden in three bands: canopy light, uncurling ferns and brightening mushroom caps, and one falling drop](scene.svg)
 
-# acra-SecretsScanner
 A command-line tool that scans source code files for exposed secrets like API keys, passwords, and private keys.  Uses regular expressions to identify potential secrets, and reports a Shannon entropy value (bits per character) for each found value. Found values are masked in every report, console and file: the report shows the key name, line, length of the mask, and entropy, never the value itself.
 
 ## Install
